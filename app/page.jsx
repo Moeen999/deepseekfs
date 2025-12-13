@@ -1,6 +1,7 @@
 "use client";
 
 import { assets } from "@/assets/assets";
+import ChatContainer from "@/components/ChatContainer";
 import PromptArea from "@/components/PromptArea";
 import Sidebar from "@/components/Sidebar";
 import Image from "next/image";
@@ -32,12 +33,16 @@ export default function Home() {
             <>
               <div className="flex items-center gap-3">
                 <Image src={assets.logo_icon} alt="" className="h-16" />
-                <p className="text-2xl font-medium">Hi, I'm DeepSeek.</p>
+                <p className="text-2xl font-medium">
+                  Welcome to Seekly by Moeen
+                </p>
               </div>
               <p className="text-sm mt-2">How can I help you today?</p>
             </>
           ) : (
-            <div></div>
+            <div>
+              <ChatContainer role="user" content="What is html"/>
+            </div>
           )}
 
           <PromptArea isLoading={isLoading} setIsloading={setIsloading} />
