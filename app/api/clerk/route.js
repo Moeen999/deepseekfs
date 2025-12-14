@@ -2,7 +2,7 @@ import { Webhook } from "svix";
 import connectToDB from "@/config/db";
 import User from "@/models/User";
 import { headers } from "next/headers";
-import { NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 export async function POST(req) {
   const wh = new Webhook(process.env.SIGIN_SECRET);
@@ -43,5 +43,5 @@ export async function POST(req) {
     console.error("❌ DB error in webhook:", dbErr);
   }
 
-  return NextResponse.json({ message: "Event Received" });
+  return NextRequest.json({ message: "Event Received" });
 }
