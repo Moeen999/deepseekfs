@@ -2,7 +2,7 @@ import { Webhook } from "svix";
 import connectToDB from "@/config/db";
 import User from "@/models/User";
 import { headers } from "next/headers";
-import { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
 export async function POST(req) {
   const wh = new Webhook(process.env.SIGIN_SECRET);
@@ -39,9 +39,9 @@ export async function POST(req) {
     if (type === "user.deleted") {
       await User.findByIdAndDelete(data.id);
     }
-  } catch (dbErr) {
-    console.error("❌ DB error in webhook:", dbErr);
+  } catch (error) {
+    console.error("❌ DB error in webhook:", error  );
   }
 
-  return NextRequest.json({ message: "Event Received" });
+  return NextResponse.json({ message: "Event Received" });
 }
