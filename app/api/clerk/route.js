@@ -5,7 +5,7 @@ import { headers } from "next/headers";
 import { NextRequest } from "next/server";
 
 export async function POST(req) {
-  const wh = new Webhook(process.env.SIGNIN_SECRET);
+  const wh = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
   const headerPayload = await headers();
   const svixHeaders = {
     "svix-id": headerPayload.get("svix-id"),
@@ -13,8 +13,7 @@ export async function POST(req) {
     "svix-signature": headerPayload.get("svix-signature"),
   };
   // ? getting payload and its verification
-  const payload = await req.json();
-  const body = JSON.stringify(payload);
+  const body = await req.text();
   const { data, type } = wh.verify(body, svixHeaders);
   //? user data preparation to store in DB
   const userData = {
@@ -23,14 +22,18 @@ export async function POST(req) {
     name: `${data.first_name} ${data.last_name}`,
     image: data.image_url,
   };
-  await connectToDB();
+  try {
+    await connectToDB();
+  } catch (error) {
+    console.log("Error connecting to DB in Clerk Webhook", error);
+  }
   switch (type) {
     case "user.created":
       await User.create(userData);
       break;
 
     case "user.updated":
-      await User.findByIdAndUpdate(data.id, userData);
+      await User.findByIdAndUpdate(data.id, userData, { upsert: true });
       break;
 
     case "user.deleted":
