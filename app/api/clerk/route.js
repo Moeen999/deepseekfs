@@ -1,44 +1,53 @@
+export const runtime = "nodejs";
+
 import { Webhook } from "svix";
 import connectToDB from "@/config/db";
 import User from "@/models/User";
 import { headers } from "next/headers";
-import { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
 export async function POST(req) {
   const wh = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
-  const headerPayload = await headers();
+
+  const headerPayload = headers();
   const svixHeaders = {
     "svix-id": headerPayload.get("svix-id"),
     "svix-timestamp": headerPayload.get("svix-timestamp"),
     "svix-signature": headerPayload.get("svix-signature"),
   };
-  // ? getting payload and its verification
+
   const body = await req.text();
-  const { data, type } = wh.verify(body, svixHeaders);
-  //? user data preparation to store in DB
+
+  let event;
+  try {
+    event = wh.verify(body, svixHeaders);
+  } catch (err) {
+    console.error("Webhook verification failed:", err);
+    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+  }
+
+  const { data, type } = event;
+
   const userData = {
     _id: data.id,
     email: data.email_addresses[0].email_address,
     name: `${data.first_name} ${data.last_name}`,
     image: data.image_url,
   };
-  try {
-    await connectToDB();
-  } catch (error) {
-    console.log("Error connecting to DB in Clerk Webhook", error);
-  }
-  switch (type) {
-    case "user.created":
-      await User.create(userData);
-      break;
 
-    case "user.updated":
-      await User.findByIdAndUpdate(data.id, userData, { upsert: true });
-      break;
+  await connectToDB();
 
-    case "user.deleted":
-      await User.findByIdAndDelete(data.id);
-      break;
+  if (type === "user.created") {
+    await User.create(userData);
   }
-  return NextRequest.json({ message: "Clerk Webhook received successfully" });
+
+  if (type === "user.updated") {
+    await User.findByIdAndUpdate(data.id, userData, { upsert: true });
+  }
+
+  if (type === "user.deleted") {
+    await User.findByIdAndDelete(data.id);
+  }
+
+  return NextResponse.json({ ok: true });
 }
