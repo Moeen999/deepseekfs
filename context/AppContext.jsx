@@ -52,7 +52,6 @@ export const AppContextProvider = ({ children }) => {
             (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
           );
           setSelectedChat(data.data[0]);
-          console.log(data.data[0]);
         }
       } else {
         toast.error(data.message);
