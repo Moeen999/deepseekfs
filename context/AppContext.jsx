@@ -42,7 +42,6 @@ export const AppContextProvider = ({ children }) => {
         },
       });
       if (data?.success) {
-        console.log(data?.data);
         setChats(data?.data);
         if (data.data.length === 0) {
           await createNewChat();
